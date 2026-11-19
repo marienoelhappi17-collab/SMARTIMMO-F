@@ -6,8 +6,11 @@ import Dashboard from "../pages/Dashboard";
 import EspaceBailleur from "../pages/EspaceBailleur";
 import EspaceLocataire from "../pages/EspaceLocataire";
 import Inscription from "../pages/Inscription";
+import MotDePasseOublie from "../pages/MotDePasseOublie";
 import NonAutorise from "../pages/NonAutorise";
+import NouveauMotDePasse from "../pages/NouveauMotDePasse";
 import Profil from "../pages/Profil";
+import VerifierEmail from "../pages/VerifierEmail";
 
 export default function AppRoutes() {
   return (
@@ -15,6 +18,9 @@ export default function AppRoutes() {
       {/* Pages publiques */}
       <Route path="/login" element={<Connexion />} />
       <Route path="/register" element={<Inscription />} />
+      <Route path="/verify-email" element={<VerifierEmail />} />
+      <Route path="/forgot-password" element={<MotDePasseOublie />} />
+      <Route path="/reset-password" element={<NouveauMotDePasse />} />
       <Route path="/unauthorized" element={<NonAutorise />} />
 
       {/* Il faut être connecté */}

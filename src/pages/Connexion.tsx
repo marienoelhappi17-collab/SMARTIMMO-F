@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { api, ApiError } from "../api";
 import Bouton from "../components/Bouton";
+import CarteAuth from "../components/CarteAuth";
 import Champ from "../components/Champ";
 import { useAuth } from "../context/AuthContext";
 import { lireErreur } from "../erreurs";
@@ -20,6 +22,8 @@ export default function Connexion() {
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [champs, setChamps] = useState<Record<string, string>>({});
   const [erreur, setErreur] = useState("");
+  const [info, setInfo] = useState("");
+  const [nonVerifie, setNonVerifie] = useState(false);
   const [chargement, setChargement] = useState(false);
 
   if (user) return <Navigate to="/dashboard" replace />;
@@ -32,7 +36,9 @@ export default function Connexion() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErreur("");
+    setInfo("");
     setChamps({});
+    setNonVerifie(false);
     setChargement(true);
     try {
       await login(form.email, form.password);
@@ -40,44 +46,62 @@ export default function Connexion() {
     } catch (err) {
       const lu = lireErreur(err);
       setChamps(lu.champs);
-      // « Identifiants incorrects » renvoyé par l'API
       if (Object.keys(lu.champs).length === 0) setErreur(lu.message);
+      // 403 : identifiants corrects mais e-mail pas encore vérifié
+      if (err instanceof ApiError && err.status === 403) setNonVerifie(true);
     } finally {
       setChargement(false);
     }
   }
 
-  return (
-    <main className="flex items-center justify-center px-4 py-8">
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        className="w-full max-w-sm space-y-4 rounded-xl bg-white p-6 shadow-md"
-      >
-        <h1 className="text-center text-2xl font-bold text-gray-800">Connexion</h1>
+  async function renvoyer() {
+    try {
+      const res = await api<null>("/auth/resend-verification", {
+        method: "POST",
+        body: JSON.stringify({ email: form.email }),
+      });
+      setInfo(res.message);
+      setErreur("");
+      setNonVerifie(false);
+    } catch (err) {
+      setErreur(lireErreur(err).message);
+    }
+  }
 
+  return (
+    <CarteAuth titre="Connexion">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {inscrit && (
           <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-            Compte créé. Vous pouvez vous connecter.
+            Compte créé. Un e-mail de vérification vous a été envoyé (lien valable 48 h).
           </p>
         )}
+        {info && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{info}</p>}
 
         <Champ label="E-mail" name="email" type="email" value={form.email} onChange={handleChange} erreur={champs.email} autoComplete="email" />
         <Champ label="Mot de passe" name="password" type="password" value={form.password} onChange={handleChange} erreur={champs.password} autoComplete="current-password" />
 
         {erreur && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</p>}
 
-        <Bouton type="submit" disabled={chargement}>
+        {nonVerifie && (
+          <Bouton variante="secondaire" pleineLargeur onClick={renvoyer}>
+            Renvoyer l'e-mail de vérification
+          </Bouton>
+        )}
+
+        <Bouton type="submit" pleineLargeur disabled={chargement}>
           {chargement ? "Connexion…" : "Se connecter"}
         </Bouton>
 
-        <p className="text-sm text-gray-600">
-          Pas de compte bailleur ?{" "}
-          <Link to="/register" className="text-marque underline">
-            S'inscrire
+        <div className="flex justify-between text-sm">
+          <Link to="/forgot-password" className="text-marque underline">
+            Mot de passe oublié ?
           </Link>
-        </p>
+          <Link to="/register" className="text-marque underline">
+            Créer un compte
+          </Link>
+        </div>
       </form>
-    </main>
+    </CarteAuth>
   );
 }

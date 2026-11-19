@@ -2,7 +2,5 @@
 /* @plugin "daisyui"; */
 
 @theme {
-  --color-marque: #0f766e;
-  --color-dark-blue: #212844;
-  --color-light-blue: #008ECC
+  --color-marque:#015833
 }

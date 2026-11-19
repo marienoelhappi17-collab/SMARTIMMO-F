@@ -13,6 +13,7 @@ interface BoutonProps {
   variante?: Variante;
   type?: "button" | "submit";
   disabled?: boolean;
+  pleineLargeur?: boolean;
   onClick?: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function Bouton({
   variante = "primaire",
   type = "button",
   disabled,
+  pleineLargeur, 
   onClick,
 }: BoutonProps) {
   return (
@@ -28,9 +30,12 @@ export default function Bouton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-lg px-4 py-2 font-medium disabled:opacity-50 ${styles[variante]}`}
-    >
+     className={`rounded-lg px-4 py-2 font-medium disabled:opacity-50 ${
+        pleineLargeur ? "w-full" : ""
+      } ${styles[variante]}`}
+       >
       {children}
+     
     </button>
   );
 }
